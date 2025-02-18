@@ -1,4 +1,4 @@
-
+import React from 'react';
 import "./App.css";
 import { supabase } from "./supabaseClient.js";
 import { useState, useEffect } from "react";
