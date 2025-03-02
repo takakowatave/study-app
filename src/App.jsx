@@ -2,6 +2,8 @@ import React from 'react';
 import "./App.css";
 import { supabase } from "./supabaseClient.js";
 import { useState, useEffect } from "react";
+import { act } from "react";
+
 
 // 全体
 const App = () => {
@@ -15,6 +17,7 @@ const App = () => {
     const fetchData = async () => {
       setLoading(true);
       const { data, error } = await supabase.from("study-record").select("*");
+      console.log("取得したデータ:", data); // ここで取得データを確認
       if (error) {
         setLoading(false);
         return;
@@ -26,6 +29,9 @@ const App = () => {
   useEffect(() => {
     fetchData();
   }, []); // 👈 依存配列を空にする
+  useEffect(() => {
+    console.log("現在の records:", records); // ここで records の変化を確認
+  }, [records]);
     
   const onChangeText = (event) => setText(event.target.value);
   const onChangeTime = (event) => setTime(parseInt(event.target.value, 10) || 0);
@@ -49,7 +55,9 @@ const App = () => {
     }
   
     // 最新データを取得
-    await fetchData();
+    await act(async () => {
+      await fetchData();
+    });
     setText("");
     setTime(0); 
   };
@@ -94,7 +102,7 @@ const App = () => {
           <ul>
             {records.length > 0 ? (
               records.map((record) => (
-                <li key={record.id}>
+                <li key={record.id} data-testid="record-item">
                   内容: {record.text} 
                   時間: {record.time}
                   <span onClick={() => deleteData(record.id)}>✖️</span>
@@ -111,4 +119,3 @@ const App = () => {
 };
 
 export default App;
-
