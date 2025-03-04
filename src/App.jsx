@@ -17,7 +17,6 @@ const App = () => {
     const fetchData = async () => {
       setLoading(true);
       const { data, error } = await supabase.from("study-record").select("*");
-      console.log("取得したデータ:", data); // ここで取得データを確認
       if (error) {
         setLoading(false);
         return;
@@ -30,7 +29,6 @@ const App = () => {
     fetchData();
   }, []); // 👈 依存配列を空にする
   useEffect(() => {
-    console.log("現在の records:", records); // ここで records の変化を確認
   }, [records]);
     
   const onChangeText = (event) => setText(event.target.value);
