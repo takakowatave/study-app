@@ -70,8 +70,10 @@ const App = () => {
       console.error("データ削除エラー:", error);
       return;
     }
-  await fetchData(); // 削除後にデータを更新
-    };
+  await act(async () => {
+     await fetchData(); // 削除後にデータを更新
+    });
+  };
 
   return (
     <>
@@ -105,7 +107,7 @@ const App = () => {
                 <li key={record.id} data-testid="record-item">
                   内容: {record.text} 
                   時間: {record.time}
-                  <span onClick={() => deleteData(record.id)}>✖️</span>
+                  <span onClick={() => deleteData(record.id)} data-testid="delete-button">✖️</span>
                 </li>
               ))
             ) : (
