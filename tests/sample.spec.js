@@ -57,3 +57,21 @@ describe("学習記録の削除テスト", () => {
   });
 });
 
+describe("学習記録のエラーテスト", () => {
+  it("フォームに入力をしないで登録を押すとエラーが表示される", async () => {
+    render(<App />);
+
+    // 登録ボタンを取得してクリック
+    const Button = screen.getByRole("button", { name: "登録" });
+    await act(async () => {
+      await userEvent.click(Button);
+    });
+
+    // エラーが表示されるか確認
+    await waitFor(() => {
+      const showError = screen.queryByTestId("error-message");
+      expect(showError).toBeInTheDocument();
+    });
+  });
+});
+

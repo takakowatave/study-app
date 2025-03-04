@@ -95,7 +95,7 @@ const App = () => {
           placeholder="0"
         />
         <button type="submit" onClick={onClickAdd}>登録</button>
-        <p style={{ color: "red" }}>{error}</p>
+        <p data-testid="error-message" style={{ color: "red" }}>{error}</p>
         <p>記入内容： {text} 勉強した内容： {time}時間</p>
         <p>累計の学習時間：{total}時間</p>
       </div>
