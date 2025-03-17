@@ -1,120 +1,126 @@
 import React from 'react';
-import "./App.css";
 import { supabase } from "./supabaseClient.js";
 import { useState, useEffect } from "react";
-import { act } from "react";
+import { act } from "react";//
 
-
-// 全体
 const App = () => {
-  const [text, setText] = useState(""); // 入力値を追跡する状態
+  const [text, setText] = useState("");
   const [time, setTime] = useState(0); // 初期値を数値に変更
-  const [records, setRecords] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] =useState(true);
+  const [record, setRecord] = useState([]); // 記録の状態を定義
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const total = records.reduce((acc, record) => acc + Number(record.time), 0);
-    const fetchData = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from("study-record").select("*");
-      if (error) {
-        setLoading(false);
-        return;
-      }
-      setRecords(data);
-      setLoading(false);
-    };
+  const fetchData = async () => { // 非同期関数を定義
+    setLoading(true); // ローディング
+    const { data, error } = await supabase.from("study-record").select("*"); // Supabaseからデータを参照する定義
+    if (error) {
+      setErrorMessage(error.message); // エラーだったらメッセージ出す
+      return;
+    }
+    setRecord(data);
+    setLoading(false); // ローディングじゃない時
+  };
 
   useEffect(() => {
     fetchData();
-  }, []); // 👈 依存配列を空にする
-  useEffect(() => {
-  }, [records]);
-    
-  const onChangeText = (event) => setText(event.target.value);
-  const onChangeTime = (event) => setTime(parseInt(event.target.value, 10) || 0);
+  }, []); // 空の第二引数を渡して「何も依存しない」＝「初回だけ動く」ようにする
 
-  const onClickAdd = async () => {
-    if (text === "") {
-      setError("学習内容を入力してください");
-      return;
-    }
-    if (time <= 0) {
-      setError("学習時間を1以上にしてください");
-      return;
-    }
-    setError(""); // エラーリセット
-    
-  // Supabase にデータを追加
-    const { error } = await supabase.from("study-record").insert([{ text, time }]);
+  const handleAdd = async () => {
+    const { data, error } = await supabase.from("study-record").insert([{ text, time }]);
     if (error) {
-      console.error("データ追加エラー:", error);
+      setErrorMessage(error.message); // エラーだったらメッセージ出す
       return;
     }
-  
-    // 最新データを取得
-    await act(async () => {
-      await fetchData();
-    });
+    setRecord([...record, ...data]); // オブジェクトとして保存
     setText("");
-    setTime(0); 
+    setTime(0);
   };
-  
-    // データを削除
-  const deleteData = async (id) => {
-    const {error} = await supabase
-    .from('study-record').delete().eq('id', id);
+
+  const handleChangeText = (e) => setText(e.target.value); // テキストの変化を取得
+
+  const handleDelete = async (id) => {
+    console.log(id);
+    const { error } = await supabase.from("study-record").delete().eq("id", id);
     if (error) {
-      console.error("データ削除エラー:", error);
+      setErrorMessage(error.message); // エラーだったらメッセージ出す
       return;
     }
-  await act(async () => {
-     await fetchData(); // 削除後にデータを更新
-    });
+    await fetchData();
   };
+
+  const handleChangeTime = (e) => setTime(Number(e.target.value) || 0);
 
   return (
-    <>
-      <div>
-        <h1>学習記録</h1>
-        学習内容：
-        <input
-          type="text"
-          value={text}
-          onChange={onChangeText} // 状態更新
-          placeholder="テキストを入力"
-        />
-        学習時間：
-        <input
-          type="number"
-          min="0"
-          value={time}
-          onChange={onChangeTime} // 状態更新
-          placeholder="0"
-        />
-        <button type="submit" onClick={onClickAdd}>登録</button>
-        <p data-testid="error-message" style={{ color: "red" }}>{error}</p>
-        <p>記入内容： {text} 勉強した内容： {time}時間</p>
-        <p>累計の学習時間：{total}時間</p>
+    <div
+      className="App"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        textAlign: "center",
+      }}
+    >
+      <h1>学習リスト</h1>
+      <div
+        style={{
+          backgroundColor: "#F3F6F9",
+          padding: "10px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "10px",
+        }}
+      >
+        <form>
+          学習内容：
+          <input
+            type="text"
+            value={text}
+            onChange={handleChangeText}
+            style={{ border: "2px #DBE0E5", padding: "8px", marginRight: "8px" }}
+          />
+        </form>
+        <form>
+          学習時間：
+          <input
+            type="number"
+            min="0"
+            value={time}
+            onChange={handleChangeTime}
+            style={{ border: "2px #DBE0E5", padding: "8px", marginRight: "8px" }}
+          />
+        </form>
+        <button
+          style={{ color: "white", backgroundColor: "#168EFD", padding: "8px", marginRight: "8px" }}
+          onClick={handleAdd}
+        >
+          追加
+        </button>
       </div>
-      <div>
-        {loading ? <p>Loading...</p> : ( 
-          <ul>
-            {records.length > 0 ? (
-              records.map((record) => (
-                <li key={record.id} data-testid="record-item">
-                  内容: {record.text} 
-                  時間: {record.time}
-                  <span onClick={() => deleteData(record.id)} data-testid="delete-button">✖️</span>
-                </li>
-              ))
-            ) : (
-              <li>データがありません</li>
-            )}
-          </ul>
-        )}
+      <div>記入内容 内容：{text} 時間：{time}</div>
+      <div
+        style={{
+          backgroundColor: "#F3F6F9",
+          padding: "10px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "10px",
+          width: "350px",
+        }}
+      >
+        <ul>
+          {record.map((item) => (
+            <li key={item.id}>
+              {item.text}
+              <span onClick={() => handleDelete(item.id)}>✖️</span>
+            </li>
+          ))}
+        </ul>
       </div>
-    </>
+    </div>
   );
 };
 
