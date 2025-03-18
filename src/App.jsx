@@ -1,7 +1,7 @@
 import React from 'react';
 import { supabase } from "./supabaseClient.js";
 import { useState, useEffect } from "react";
-import { act } from "react";//
+import { act } from "react";
 
 const App = () => {
   const [text, setText] = useState("");
@@ -26,12 +26,23 @@ const App = () => {
   }, []); // 空の第二引数を渡して「何も依存しない」＝「初回だけ動く」ようにする
 
   const handleAdd = async () => {
+    let message = "";
+    if(text.trim()==="") {
+      message = "学習内容を入力してください";
+    } else if (time <= 0) {
+      message = "学習時間を入力してください";
+    }
+    if(message) {
+      setErrorMessage(message);
+      return;
+    }
+    
     const { data, error } = await supabase.from("study-record").insert([{ text, time }]);
-    if (error) {
+    if (error) {     
       setErrorMessage(error.message); // エラーだったらメッセージ出す
       return;
     }
-    setRecord([...record, ...data]); // オブジェクトとして保存
+    await fetchData();
     setText("");
     setTime(0);
   };
@@ -98,6 +109,7 @@ const App = () => {
         >
           追加
         </button>
+        <p style={{ color: "red" }}>{errorMessage}</p>
       </div>
       <div>記入内容 内容：{text} 時間：{time}</div>
       <div
